@@ -87,17 +87,22 @@
   <build>
     <outputDirectory>target/${project.artifactId}/WEB-INF/classes</outputDirectory>
       <sourceDirectory>src, gen-src, ../common/src</sourceDirectory>
-                   
-    <plugins>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                  <includes>
+                      <include>src/com/digitald4/${project.artifactId}/server/*.java</include>
+                  </includes>
+              </configuration>
+          </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>2.3</version>
         <configuration>
           <archiveClasses>true</archiveClasses>
-            <includes>
-                <include>src/com/digitald4/${project.artifactId}/server/*.java</include>
-            </includes>
           <webResources>
             <!-- in order to interpolate version from pom into appengine-web.xml -->
             <resource>
