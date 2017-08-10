@@ -85,7 +85,8 @@
   </dependencies>
     
   <build>
-    <outputDirectory>target/${project.artifactId}/WEB-INF/classes</outputDirectory> 
+    <outputDirectory>target/${project.artifactId}/WEB-INF/classes</outputDirectory>
+      <sourceDirectory>src, gen-src, ../common/src</sourceDirectory>
                    
     <plugins>
       <plugin>
@@ -94,6 +95,9 @@
         <version>2.3</version>
         <configuration>
           <archiveClasses>true</archiveClasses>
+            <includes>
+                <include>src/com/digitald4/${project.artifactId}/server/*.java</include>
+            </includes>
           <webResources>
             <!-- in order to interpolate version from pom into appengine-web.xml -->
             <resource>
