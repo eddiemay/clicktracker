@@ -51,3 +51,9 @@
 		<param-name>emailpass</param-name>
 		<param-value>getSchooled85</param-value>
 	</context-param>
+
+  <context-param>
+    <param-name>dburl</param-name>
+    <param-value>jdbc:mysql://localhost/clicktracker?autoReconnect=true</param-value>
+  </context-param>
+</web-app>

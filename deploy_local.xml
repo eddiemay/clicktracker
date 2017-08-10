@@ -124,10 +124,10 @@
 				<include name="commons-pool*.jar" />
 				<include name="javax.mail.jar" />
 				<include name="joda-time*.jar" />
-                <include name="gson-2.7.jar" />
-                <include name="guava-20.0.jar" />
+        <include name="gson-2.7.jar" />
+        <include name="guava-20.0.jar" />
 				<include name="mysql-connector*.jar" />
-                <include name="protobuf-java-3.3.0-custom.jar" />
+        <include name="protobuf-java-3.3.0-custom.jar" />
 			</fileset>
 		</copy>
         <copy todir="webapps/${app.name}/js/html" flatten="true">
