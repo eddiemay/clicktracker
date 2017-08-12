@@ -61,14 +61,18 @@ public class ClickTracker extends HttpServlet {
 		String requestLanguage = getRequestLanguage(requestUrl);
 		String acceptLanguage = getAcceptLanguage(request);
 		String redirectUrl = getRedirctUrl(requestUrl, requestLanguage, acceptLanguage);
-		clickStore.create(Click.newBuilder()
-				.setUrl(requestUrl)
-				.setRecorded(System.currentTimeMillis())
-				.setIpAddress(request.getRemoteAddr())
-				.setAcceptLanguage(acceptLanguage)
-				.setRequestLanguage(requestLanguage)
-				.setRedirectUrl(redirectUrl)
-				.build());
+		try {
+			clickStore.create(Click.newBuilder()
+					.setUrl(requestUrl)
+					.setRecorded(System.currentTimeMillis())
+					.setIpAddress(request.getRemoteAddr())
+					.setAcceptLanguage(acceptLanguage)
+					.setRequestLanguage(requestLanguage)
+					.setRedirectUrl(redirectUrl)
+					.build());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		try {
 			response.sendRedirect(redirectUrl);
 			// response.getWriter().print("");

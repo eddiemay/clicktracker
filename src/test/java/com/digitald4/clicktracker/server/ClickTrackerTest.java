@@ -1,10 +1,12 @@
 package com.digitald4.clicktracker.server;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
+import com.digitald4.common.exception.DD4StorageException;
 import com.digitald4.common.storage.Store;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,5 +74,16 @@ public class ClickTrackerTest {
 		clickTracker.doGet(request, response);
 
 		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=ru");
+	}
+
+	@Test
+	public void testContinuesOnDBError() throws Exception {
+		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
+		when(request.getParameter("url")).thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/");
+		when(clickStore.create(any(Click.class))).thenThrow(new DD4StorageException("Database not available"));
+
+		clickTracker.doGet(request, response);
+
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/");
 	}
 }
