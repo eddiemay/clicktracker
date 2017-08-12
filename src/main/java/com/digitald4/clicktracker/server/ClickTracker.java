@@ -3,6 +3,7 @@ package com.digitald4.clicktracker.server;
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
 import com.digitald4.common.jdbc.DBConnector;
 import com.digitald4.common.jdbc.DBConnectorThreadPoolImpl;
+import com.digitald4.common.storage.DAOCloudDataStore;
 import com.digitald4.common.storage.DAOProtoSQLImpl;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
@@ -15,14 +16,24 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "API Service Servlet", urlPatterns = {"/ct/*"})
 public class ClickTracker extends HttpServlet {
+	private enum DataStore {
+		mysql,
+		cloudDatastore
+	}
 	private static final String STANDARD_LANG = "lang=";
 	private static final String JW_ORG_LANG = "wtlocale=";
+	private static final DataStore selectedDatastore = DataStore.cloudDatastore;
 	private final DBConnector connector;
 	private final Store<Click> clickStore;
 
 	public ClickTracker() {
-		connector = new DBConnectorThreadPoolImpl();
-		clickStore = new GenericStore<>(new DAOProtoSQLImpl<>(Click.class, getConnector()));
+		if (selectedDatastore == DataStore.mysql) {
+			connector = new DBConnectorThreadPoolImpl();
+			clickStore = new GenericStore<>(new DAOProtoSQLImpl<>(Click.class, getConnector()));
+		} else {
+			connector = null;
+			clickStore = new GenericStore<>(new DAOCloudDataStore<>(Click.class));
+		}
 	}
 
 	public ClickTracker(DBConnector connector, Store<Click> clickStore) {
@@ -35,11 +46,13 @@ public class ClickTracker extends HttpServlet {
 	}
 
 	public void init() {
-		ServletContext sc = getServletContext();
-		getConnector().connect(sc.getInitParameter("dbdriver"),
-				sc.getInitParameter("dburl"),
-				sc.getInitParameter("dbuser"),
-				sc.getInitParameter("dbpass"));
+		if (connector != null) {
+			ServletContext sc = getServletContext();
+			getConnector().connect(sc.getInitParameter("dbdriver"),
+					sc.getInitParameter("dburl"),
+					sc.getInitParameter("dbuser"),
+					sc.getInitParameter("dbpass"));
+		}
 	}
 
 	@Override
