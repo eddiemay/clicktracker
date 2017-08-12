@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "API Service Servlet", urlPatterns = {"/"})
+@WebServlet(name = "API Service Servlet", urlPatterns = "/")
 public class ClickTracker extends HttpServlet {
 	private enum DataStore {
 		mysql,
