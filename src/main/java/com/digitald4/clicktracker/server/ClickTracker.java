@@ -32,7 +32,14 @@ public class ClickTracker extends HttpServlet {
 			clickStore = new GenericStore<>(new DAOProtoSQLImpl<>(Click.class, getConnector()));
 		} else {
 			connector = null;
-			clickStore = new GenericStore<>(new DAOCloudDataStore<>(Click.class));
+			Store<Click> temp = null;
+			try {
+				temp = new GenericStore<>(new DAOCloudDataStore<>(Click.class));
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				clickStore = temp;
+			}
 		}
 	}
 
@@ -61,17 +68,19 @@ public class ClickTracker extends HttpServlet {
 		String requestLanguage = getRequestLanguage(requestUrl);
 		String acceptLanguage = getAcceptLanguage(request);
 		String redirectUrl = getRedirctUrl(requestUrl, requestLanguage, acceptLanguage);
-		try {
-			clickStore.create(Click.newBuilder()
-					.setUrl(requestUrl)
-					.setRecorded(System.currentTimeMillis())
-					.setIpAddress(request.getRemoteAddr())
-					.setAcceptLanguage(acceptLanguage)
-					.setRequestLanguage(requestLanguage)
-					.setRedirectUrl(redirectUrl)
-					.build());
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (clickStore != null) {
+			try {
+				clickStore.create(Click.newBuilder()
+						.setUrl(requestUrl)
+						.setRecorded(System.currentTimeMillis())
+						.setIpAddress(request.getRemoteAddr())
+						.setAcceptLanguage(acceptLanguage)
+						.setRequestLanguage(requestLanguage)
+						.setRedirectUrl(redirectUrl)
+						.build());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		try {
 			response.sendRedirect(redirectUrl);
