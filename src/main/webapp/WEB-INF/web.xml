@@ -8,7 +8,16 @@
 	<description>
 		Design, Develop, Deploy, D4
 	</description>
-	
+
+  <servlet>
+    <servlet-name>clicktracker</servlet-name>
+    <servlet-class>com.digitald4.clicktracker.server.ClickTracker</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>clicktracker</servlet-name>
+    <url-pattern>/ct</url-pattern>
+  </servlet-mapping>
+
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
