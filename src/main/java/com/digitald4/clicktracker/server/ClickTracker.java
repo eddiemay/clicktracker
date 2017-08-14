@@ -9,12 +9,10 @@ import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
 import javax.servlet.ServletContext;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "API Service Servlet", urlPatterns = "/ct")
 public class ClickTracker extends HttpServlet {
 	private enum DataStore {
 		mysql,
