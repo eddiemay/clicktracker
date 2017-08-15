@@ -8,6 +8,8 @@ import com.digitald4.common.storage.DAOProtoSQLImpl;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +23,14 @@ public class ClickTracker extends HttpServlet {
 	private static final String STANDARD_LANG = "lang=";
 	private static final String JW_ORG_LANG = "wtlocale=";
 	private static final DataStore selectedDatastore = DataStore.cloudDatastore;
+	/**
+	 * Maps ISO standard language codes to WT language codes.
+	 */
+	private static final Map<String, String> languageMapping = new HashMap<>();
+	static {
+		languageMapping.put("es", "S");
+		languageMapping.put("es-419", "S");
+	}
 	private final DBConnector connector;
 	private final Store<Click> clickStore;
 
@@ -98,6 +108,9 @@ public class ClickTracker extends HttpServlet {
 		if (requestLang.contains("&")) {
 			requestLang = requestLang.substring(0, requestLang.indexOf("&"));
 		}
+		if (requestLang.contains("=")) {
+			requestLang = requestLang.substring(requestLang.indexOf("=") + 1);
+		}
 		return requestLang;
 	}
 
@@ -112,13 +125,25 @@ public class ClickTracker extends HttpServlet {
 		return acceptLanguage;
 	}
 
-	private static String getRedirctUrl(String url, String requestLanguage, String acceptLanguage) {
+	private static String mapLanguage(String isoLang) {
+		String wtLocale = languageMapping.get(isoLang);
+		if (wtLocale == null) {
+			return isoLang;
+		}
+		return wtLocale;
+	}
+
+	private static String getRedirctUrl(String url, String requestLanguage_, String acceptLanguage) {
+		String requestLanguage = mapLanguage(requestLanguage_);
+		acceptLanguage = mapLanguage(acceptLanguage);
 		if (url.contains(JW_ORG_LANG)
 				|| requestLanguage.isEmpty() && (acceptLanguage.isEmpty() || acceptLanguage.equals("en-US"))) {
 			return url;
 		}
 		if (!requestLanguage.isEmpty()) {
-			return url.replace(STANDARD_LANG, JW_ORG_LANG);
+			return url
+					.replace(STANDARD_LANG, JW_ORG_LANG)
+					.replace("=" + requestLanguage_, "=" + requestLanguage);
 		}
 		return url + "?" + JW_ORG_LANG + acceptLanguage;
 	}

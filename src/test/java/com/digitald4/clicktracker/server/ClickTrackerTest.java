@@ -49,11 +49,11 @@ public class ClickTrackerTest {
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=es-419");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
 	}
 
 	@Test
-	public void testJTLangRequestOverridesAcceptLanguage() throws Exception {
+	public void testWTLocaleRequestOverridesAcceptLanguage() throws Exception {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
 		when(request.getHeader("Accept-Language")).thenReturn("es-419,es;q=0.8");
 		when(request.getParameter("url"))
@@ -67,13 +67,13 @@ public class ClickTrackerTest {
 	@Test
 	public void testLangRequestOverridesAcceptLanguage() throws Exception {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
-		when(request.getHeader("Accept-Language")).thenReturn("es-419,es;q=0.8");
+		when(request.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.8");
 		when(request.getParameter("url"))
-				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?lang=ru");
+				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?lang=es");
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=ru");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
 	}
 
 	@Test
