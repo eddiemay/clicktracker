@@ -30,6 +30,7 @@ public class ClickTracker extends HttpServlet {
 	static {
 		languageMapping.put("es", "S");
 		languageMapping.put("es-419", "S");
+		languageMapping.put("es-xl", "S");
 	}
 	private final DBConnector connector;
 	private final Store<Click> clickStore;
@@ -128,6 +129,12 @@ public class ClickTracker extends HttpServlet {
 	private static String mapLanguage(String isoLang) {
 		String wtLocale = languageMapping.get(isoLang);
 		if (wtLocale == null) {
+			if (isoLang.contains("-")) {
+				wtLocale = languageMapping.get(isoLang.substring(0, isoLang.indexOf("-")));
+				if (wtLocale != null) {
+					return wtLocale;
+				}
+			}
 			return isoLang;
 		}
 		return wtLocale;
