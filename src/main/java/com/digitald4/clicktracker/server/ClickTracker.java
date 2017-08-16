@@ -9,7 +9,9 @@ import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,17 +22,15 @@ public class ClickTracker extends HttpServlet {
 		mysql,
 		cloudDatastore
 	}
-	private static final String STANDARD_LANG = "lang=";
-	private static final String JW_ORG_LANG = "wtlocale=";
+	private static final String LOCALE = "locale=";
 	private static final DataStore selectedDatastore = DataStore.cloudDatastore;
+
 	/**
-	 * Maps ISO standard language codes to WT language codes.
+	 * Set of request parameters used by ClickTracker
 	 */
-	private static final Map<String, String> languageMapping = new HashMap<>();
+	private static final Set<String> paramSet = new HashSet<>();
 	static {
-		languageMapping.put("es", "S");
-		languageMapping.put("es-419", "S");
-		languageMapping.put("es-xl", "S");
+		paramSet.add("url");
 	}
 	private final DBConnector connector;
 	private final Store<Click> clickStore;
@@ -73,18 +73,24 @@ public class ClickTracker extends HttpServlet {
 
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) {
-		String requestUrl = request.getParameter("url");
-		String requestLanguage = getRequestLanguage(requestUrl);
+		StringBuffer requestBuffer = new StringBuffer(request.getParameter("url"));
+		// Add back to the url any parameters that were turned into request parameters.
+		request.getParameterMap().forEach((key, values) -> {
+			if (!paramSet.contains(key)) { // Filter out parameters for this servlet.
+				requestBuffer.append("&").append(key).append("=").append(values[0]);
+			}
+		});
+
+		String requestUrl = requestBuffer.toString();
 		String acceptLanguage = getAcceptLanguage(request);
-		String redirectUrl = getRedirctUrl(requestUrl, requestLanguage, acceptLanguage);
+		String redirectUrl = getRedirctUrl(requestUrl, acceptLanguage);
 		if (clickStore != null) {
 			try {
 				clickStore.create(Click.newBuilder()
-						.setUrl(requestUrl)
+						.setUrl(requestUrl.toString())
 						.setRecorded(System.currentTimeMillis())
 						.setIpAddress(request.getRemoteAddr())
 						.setAcceptLanguage(acceptLanguage)
-						.setRequestLanguage(requestLanguage)
 						.setRedirectUrl(redirectUrl)
 						.build());
 			} catch (Exception e) {
@@ -99,22 +105,6 @@ public class ClickTracker extends HttpServlet {
 		}
 	}
 
-	private static String getRequestLanguage(String url) {
-		String requestLang = "";
-		if (url.contains(JW_ORG_LANG)) {
-			requestLang = url.substring(url.indexOf(JW_ORG_LANG));
-		} else if (url.contains(STANDARD_LANG)) {
-			requestLang = url.substring(url.indexOf(STANDARD_LANG));
-		}
-		if (requestLang.contains("&")) {
-			requestLang = requestLang.substring(0, requestLang.indexOf("&"));
-		}
-		if (requestLang.contains("=")) {
-			requestLang = requestLang.substring(requestLang.indexOf("=") + 1);
-		}
-		return requestLang;
-	}
-
 	private static String getAcceptLanguage(HttpServletRequest request) {
 		String acceptLanguage = request.getHeader("Accept-Language");
 		if (acceptLanguage == null) {
@@ -126,32 +116,13 @@ public class ClickTracker extends HttpServlet {
 		return acceptLanguage;
 	}
 
-	private static String mapLanguage(String isoLang) {
-		String wtLocale = languageMapping.get(isoLang);
-		if (wtLocale == null) {
-			if (isoLang.contains("-")) {
-				wtLocale = languageMapping.get(isoLang.substring(0, isoLang.indexOf("-")));
-				if (wtLocale != null) {
-					return wtLocale;
-				}
-			}
-			return isoLang;
-		}
-		return wtLocale;
-	}
-
-	private static String getRedirctUrl(String url, String requestLanguage_, String acceptLanguage) {
-		String requestLanguage = mapLanguage(requestLanguage_);
-		acceptLanguage = mapLanguage(acceptLanguage);
-		if (url.contains(JW_ORG_LANG)
-				|| requestLanguage.isEmpty() && (acceptLanguage.isEmpty() || acceptLanguage.equals("en-US"))) {
+	private static String getRedirctUrl(String url, String acceptLanguage) {
+		if (url.contains(LOCALE) || acceptLanguage.isEmpty() || acceptLanguage.equals("en-US")) {
 			return url;
 		}
-		if (!requestLanguage.isEmpty()) {
-			return url
-					.replace(STANDARD_LANG, JW_ORG_LANG)
-					.replace("=" + requestLanguage_, "=" + requestLanguage);
+		if (acceptLanguage.contains("-")) {
+			acceptLanguage = acceptLanguage.substring(0, acceptLanguage.indexOf("-"));
 		}
-		return url + "?" + JW_ORG_LANG + acceptLanguage;
+		return url + "?" + LOCALE + acceptLanguage;
 	}
 }

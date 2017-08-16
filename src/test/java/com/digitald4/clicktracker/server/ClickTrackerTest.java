@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
 import com.digitald4.common.exception.DD4StorageException;
 import com.digitald4.common.storage.Store;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.Test;
@@ -31,6 +33,24 @@ public class ClickTrackerTest {
 	}
 
 	@Test
+	public void testReConstructsRequest() throws Exception {
+		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
+		Map<String, String[]> parameterMap = new HashMap<>();
+		String url = "https://www.jw.org/finder?docid=1011214";
+		parameterMap.put("url", new String[]{url});
+		parameterMap.put("item", new String[]{"docid-502017855_1_VIDEO"});
+		parameterMap.put("prefer", new String[]{"content"});
+		parameterMap.put("srcid", new String[]{"share"});
+		when(request.getParameterMap()).thenReturn(parameterMap);
+		when(request.getParameter("url")).thenReturn(url);
+
+		clickTracker.doGet(request, response);
+
+		verify(response).sendRedirect(
+				"https://www.jw.org/finder?docid=1011214&item=docid-502017855_1_VIDEO&prefer=content&srcid=share");
+	}
+
+	@Test
 	public void testEnAcceptLanguageRequest() throws Exception {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
 		when(request.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.8");
@@ -49,7 +69,7 @@ public class ClickTrackerTest {
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?locale=es");
 	}
 
 	@Test
@@ -60,7 +80,7 @@ public class ClickTrackerTest {
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?locale=es");
 	}
 
 	@Test
@@ -71,7 +91,7 @@ public class ClickTrackerTest {
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?locale=es");
 	}
 
 	@Test
@@ -79,23 +99,23 @@ public class ClickTrackerTest {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
 		when(request.getHeader("Accept-Language")).thenReturn("es-419,es;q=0.8");
 		when(request.getParameter("url"))
-				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?locale=es");
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?locale=es");
 	}
 
 	@Test
-	public void testLangRequestOverridesAcceptLanguage() throws Exception {
+	public void testLocaleRequestOverridesAcceptLanguage() throws Exception {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
-		when(request.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.8");
+		when(request.getHeader("Accept-Language")).thenReturn("es-419,es;q=0.8");
 		when(request.getParameter("url"))
-				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?lang=es");
+				.thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/?locale=en");
 
 		clickTracker.doGet(request, response);
 
-		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?wtlocale=S");
+		verify(response).sendRedirect("https://www.jw.org/en/publications/books/good-news-from-god/?locale=en");
 	}
 
 	@Test
