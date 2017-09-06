@@ -7,6 +7,9 @@ import static org.mockito.Mockito.when;
 
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
 import com.digitald4.common.exception.DD4StorageException;
+import com.digitald4.common.storage.DAOConnectorImpl;
+import com.digitald4.common.storage.DataConnector;
+import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +22,9 @@ public class ClickTrackerTest {
 
 	@Mock private HttpServletRequest request = mock(HttpServletRequest.class);
 	@Mock private HttpServletResponse response = mock(HttpServletResponse.class);
-	@Mock private Store<Click> clickStore = mock(Store.class);
-	private ClickTracker clickTracker = new ClickTracker(null, clickStore);
+	@Mock private DataConnector dataConnector = mock(DataConnector.class);
+	private Store<Click> clickStore = new GenericStore<>(new DAOConnectorImpl<>(Click.class, () -> dataConnector));
+	private ClickTracker clickTracker = new ClickTracker(clickStore);
 
 	@Test
 	public void testBasicRequest() throws Exception {
@@ -122,7 +126,7 @@ public class ClickTrackerTest {
 	public void testContinuesOnDBError() throws Exception {
 		when(request.getRemoteAddr()).thenReturn("4.2.2.1");
 		when(request.getParameter("url")).thenReturn("https://www.jw.org/en/publications/books/good-news-from-god/");
-		when(clickStore.create(any(Click.class))).thenThrow(new DD4StorageException("Database not available"));
+		when(dataConnector.create(any(Click.class))).thenThrow(new DD4StorageException("Database not available"));
 
 		clickTracker.doGet(request, response);
 

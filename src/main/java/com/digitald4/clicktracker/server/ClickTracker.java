@@ -1,16 +1,15 @@
 package com.digitald4.clicktracker.server;
 
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
-import com.digitald4.common.jdbc.DBConnector;
 import com.digitald4.common.jdbc.DBConnectorThreadPoolImpl;
-import com.digitald4.common.storage.DAOCloudDataStore;
-import com.digitald4.common.storage.DAOProtoSQLImpl;
+import com.digitald4.common.storage.DAOConnectorImpl;
+import com.digitald4.common.storage.DataConnector;
+import com.digitald4.common.storage.DataConnectorCloudDS;
+import com.digitald4.common.storage.DataConnectorSQLImpl;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
@@ -18,12 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class ClickTracker extends HttpServlet {
-	private enum DataStore {
-		mysql,
-		cloudDatastore
-	}
 	private static final String LOCALE = "locale=";
-	private static final DataStore selectedDatastore = DataStore.cloudDatastore;
 
 	/**
 	 * Set of request parameters used by ClickTracker
@@ -32,42 +26,28 @@ public class ClickTracker extends HttpServlet {
 	static {
 		paramSet.add("url");
 	}
-	private final DBConnector connector;
 	private final Store<Click> clickStore;
+	private DataConnector dataConnector;
 
 	public ClickTracker() {
-		if (selectedDatastore == DataStore.mysql) {
-			connector = new DBConnectorThreadPoolImpl();
-			clickStore = new GenericStore<>(new DAOProtoSQLImpl<>(Click.class, getConnector()));
-		} else {
-			connector = null;
-			Store<Click> temp = null;
-			try {
-				temp = new GenericStore<>(new DAOCloudDataStore<>(Click.class));
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				clickStore = temp;
-			}
-		}
+		clickStore = new GenericStore<>(new DAOConnectorImpl<>(Click.class, () -> dataConnector));
 	}
 
-	public ClickTracker(DBConnector connector, Store<Click> clickStore) {
-		this.connector = connector;
+	public ClickTracker(Store<Click> clickStore) {
 		this.clickStore = clickStore;
 	}
 
-	public DBConnector getConnector() {
-		return connector;
-	}
-
 	public void init() {
-		if (connector != null) {
-			ServletContext sc = getServletContext();
-			getConnector().connect(sc.getInitParameter("dbdriver"),
-					sc.getInitParameter("dburl"),
-					sc.getInitParameter("dbuser"),
-					sc.getInitParameter("dbpass"));
+		ServletContext sc = getServletContext();
+		if (sc.getServerInfo().contains("Tomcat")) {
+			// We use MySQL with Tomcat, so if Tomcat, MySQL
+			dataConnector = new DataConnectorSQLImpl(new DBConnectorThreadPoolImpl()
+					.connect(sc.getInitParameter("dbdriver"),
+							sc.getInitParameter("dburl"),
+							sc.getInitParameter("dbuser"),
+							sc.getInitParameter("dbpass")));
+		} else  { // We use CloudDataStore with AppEngine.
+			dataConnector = new DataConnectorCloudDS();
 		}
 	}
 
@@ -87,7 +67,7 @@ public class ClickTracker extends HttpServlet {
 		if (clickStore != null) {
 			try {
 				clickStore.create(Click.newBuilder()
-						.setUrl(requestUrl.toString())
+						.setUrl(requestUrl)
 						.setRecorded(System.currentTimeMillis())
 						.setIpAddress(request.getRemoteAddr())
 						.setAcceptLanguage(acceptLanguage)
@@ -99,7 +79,6 @@ public class ClickTracker extends HttpServlet {
 		}
 		try {
 			response.sendRedirect(redirectUrl);
-			// response.getWriter().print("");
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
