@@ -11,6 +11,7 @@ import com.digitald4.common.storage.DAOConnectorImpl;
 import com.digitald4.common.storage.DataConnector;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -23,8 +24,9 @@ public class ClickTrackerTest {
 	@Mock private HttpServletRequest request = mock(HttpServletRequest.class);
 	@Mock private HttpServletResponse response = mock(HttpServletResponse.class);
 	@Mock private DataConnector dataConnector = mock(DataConnector.class);
+	@Mock private Clock clock = mock(Clock.class);
 	private Store<Click> clickStore = new GenericStore<>(new DAOConnectorImpl<>(Click.class, () -> dataConnector));
-	private ClickTracker clickTracker = new ClickTracker(clickStore);
+	private ClickTracker clickTracker = new ClickTracker(clickStore, clock);
 
 	@Test
 	public void testBasicRequest() throws Exception {

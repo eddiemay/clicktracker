@@ -9,6 +9,7 @@ import com.digitald4.common.storage.DataConnectorSQLImpl;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
+import java.time.Clock;
 import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.ServletContext;
@@ -28,13 +29,16 @@ public class ClickTracker extends HttpServlet {
 	}
 	private final Store<Click> clickStore;
 	private DataConnector dataConnector;
+	private final Clock clock;
 
 	public ClickTracker() {
 		clickStore = new GenericStore<>(new DAOConnectorImpl<>(Click.class, () -> dataConnector));
+		this.clock = Clock.systemDefaultZone();
 	}
 
-	public ClickTracker(Store<Click> clickStore) {
+	public ClickTracker(Store<Click> clickStore, Clock clock) {
 		this.clickStore = clickStore;
+		this.clock = clock;
 	}
 
 	public void init() {
