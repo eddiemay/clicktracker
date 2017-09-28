@@ -2,10 +2,9 @@ package com.digitald4.clicktracker.server;
 
 import com.digitald4.clicktracker.proto.ClickTrackerProtos.Click;
 import com.digitald4.common.jdbc.DBConnectorThreadPoolImpl;
-import com.digitald4.common.storage.DAOConnectorImpl;
-import com.digitald4.common.storage.DataConnector;
-import com.digitald4.common.storage.DataConnectorCloudDS;
-import com.digitald4.common.storage.DataConnectorSQLImpl;
+import com.digitald4.common.storage.DAO;
+import com.digitald4.common.storage.DAOCloudDS;
+import com.digitald4.common.storage.DAOSQLImpl;
 import com.digitald4.common.storage.GenericStore;
 import com.digitald4.common.storage.Store;
 import java.io.IOException;
@@ -28,11 +27,11 @@ public class ClickTracker extends HttpServlet {
 		paramSet.add("url");
 	}
 	private final Store<Click> clickStore;
-	private DataConnector dataConnector;
+	private DAO dao;
 	private final Clock clock;
 
 	public ClickTracker() {
-		clickStore = new GenericStore<>(new DAOConnectorImpl<>(Click.class, () -> dataConnector));
+		clickStore = new GenericStore<>(Click.class, () -> dao);
 		this.clock = Clock.systemDefaultZone();
 	}
 
@@ -45,13 +44,13 @@ public class ClickTracker extends HttpServlet {
 		ServletContext sc = getServletContext();
 		if (sc.getServerInfo().contains("Tomcat")) {
 			// We use MySQL with Tomcat, so if Tomcat, MySQL
-			dataConnector = new DataConnectorSQLImpl(new DBConnectorThreadPoolImpl()
+			dao = new DAOSQLImpl(new DBConnectorThreadPoolImpl()
 					.connect(sc.getInitParameter("dbdriver"),
 							sc.getInitParameter("dburl"),
 							sc.getInitParameter("dbuser"),
 							sc.getInitParameter("dbpass")));
 		} else  { // We use CloudDataStore with AppEngine.
-			dataConnector = new DataConnectorCloudDS();
+			dao = new DAOCloudDS();
 		}
 	}
 
@@ -72,7 +71,7 @@ public class ClickTracker extends HttpServlet {
 			try {
 				clickStore.create(Click.newBuilder()
 						.setUrl(requestUrl)
-						.setRecorded(System.currentTimeMillis())
+						.setRecorded(clock.millis())
 						.setIpAddress(request.getRemoteAddr())
 						.setAcceptLanguage(acceptLanguage)
 						.setRedirectUrl(redirectUrl)
