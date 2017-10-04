@@ -18,6 +18,15 @@
     <url-pattern>/ct</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>API Service Servlet</servlet-name>
+    <servlet-class>com.digitald4.iis.server.ApiServiceServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>API Service Servlet</servlet-name>
+    <url-pattern>/api/*</url-pattern>
+  </servlet-mapping>
+
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
