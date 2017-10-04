@@ -20,7 +20,7 @@
 
   <servlet>
     <servlet-name>API Service Servlet</servlet-name>
-    <servlet-class>com.digitald4.iis.server.ApiServiceServlet</servlet-class>
+    <servlet-class>com.digitald4.clicktracker.server.ApiServiceServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>API Service Servlet</servlet-name>
