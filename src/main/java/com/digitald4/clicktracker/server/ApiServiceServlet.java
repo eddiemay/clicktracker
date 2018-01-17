@@ -7,6 +7,6 @@ import javax.servlet.ServletException;
 
 public class ApiServiceServlet extends com.digitald4.common.server.ApiServiceServlet {
 	public ApiServiceServlet() throws ServletException {
-		addService("click", new SingleProtoService<>(new GenericStore<>(Click.class, dataAccessObjectProvider)));
+		addService("click", new SingleProtoService<>(new GenericStore<>(Click.class, daoProvider)));
 	}
 }
