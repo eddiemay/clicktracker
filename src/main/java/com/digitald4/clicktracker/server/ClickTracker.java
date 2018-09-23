@@ -19,9 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 public class ClickTracker extends HttpServlet {
 	private static final String LOCALE = "locale=";
 
-	/**
-	 * Set of request parameters used by ClickTracker
-	 */
+	/** Set of request parameters used by ClickTracker. */
 	private static final Set<String> paramSet = new HashSet<>();
 	static {
 		paramSet.add("url");
